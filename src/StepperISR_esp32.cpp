@@ -1,7 +1,7 @@
 
 #include "StepperISR.h"
 
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP_PLATFORM)
 
 #define DEFAULT_TIMER_H_L_TRANSITION 160
 

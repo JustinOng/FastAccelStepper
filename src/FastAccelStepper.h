@@ -1,6 +1,6 @@
 #ifndef FASTACCELSTEPPER_H
 #define FASTACCELSTEPPER_H
-#if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_AVR)
+#if defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_AVR) || defined(ESP_PLATFORM)
 #include <Arduino.h>
 #else
 #include <math.h>
@@ -14,7 +14,7 @@
 #include "PoorManFloat.h"
 #include "RampGenerator.h"
 
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP_PLATFORM)
 #define MIN_DELTA_TICKS (TICKS_PER_S / 200000)
 #elif defined(ARDUINO_ARCH_AVR)
 // AVR:
@@ -314,7 +314,7 @@ class FastAccelStepper {
   void detachFromPin();
   void reAttachToPin();
 
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP_PLATFORM)
   // These two functions are only available on esp32.
   // The first can attach any of the eight pulse counters to this stepper.
   // The second then will read the current pulse counter value
@@ -377,7 +377,7 @@ class FastAccelStepper {
   uint16_t _off_delay_count;
   uint16_t _auto_disable_delay_counter;
 
-#if defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP32) || defined(ESP_PLATFORM)
   int16_t _attached_pulse_cnt_unit;
 #endif
 #if (TEST_MEASURE_ISR_SINGLE_FILL == 1)
