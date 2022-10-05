@@ -79,9 +79,11 @@ struct queue_end_s {
 // This for ESP32 derivates using arduino core
 //
 //==========================================================================
-#elif defined(ARDUINO_ARCH_ESP32)
+#elif defined(ARDUINO_ARCH_ESP32) || defined(ESP_PLATFORM)
+#if defined(ARDUINO_ARCH_ESP32)
 // this is an arduino platform, so include the Arduino.h header file
 #include <Arduino.h>
+#endif
 #include <sdkconfig.h>
 
 #define SUPPORT_ESP32
@@ -153,9 +155,24 @@ struct queue_end_s {
 #error "Unsupported derivate"
 #endif
 
+#if defined(ARDUINO_ARCH_ESP32)
 // For esp32 using arduino, just use arduino definition
 #define fasEnableInterrupts interrupts
 #define fasDisableInterrupts noInterrupts
+#elif defined(ESP_PLATFORM)
+// on espidf need to use portDISABLE/ENABLE_INTERRUPTS
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#define fasDisableInterrupts portDISABLE_INTERRUPTS
+#define fasEnableInterrupts portENABLE_INTERRUPTS
+
+// The espidf-platform needs a couple of arduino like definitions
+#define LOW 0
+#define HIGH 1
+#define OUTPUT GPIO_MODE_OUTPUT
+#define pinMode(pin, mode) gpio_set_direction((gpio_num_t)pin, mode)
+#define digitalWrite(pin, level) gpio_set_level((gpio_num_t)pin, level)
+#endif
 
 #if ESP_IDF_VERSION_MAJOR == 4
 #define __ESP32_IDF_V44__
@@ -185,73 +202,6 @@ struct queue_end_s {
 #define DEBUG_LED_HALF_PERIOD 50
 
 #define noop_or_wait vTaskDelay(1)
-
-// have more than one core
-#define SUPPORT_CPU_AFFINITY
-
-//==========================================================================
-//
-// This for ESP32 derivates using espidf
-//
-// This is most likely broken and not tested on github actions
-//
-//==========================================================================
-#elif defined(ESP_PLATFORM)
-
-#define SUPPORT_ESP32
-
-// esp32 specific includes
-#include <driver/gpio.h>
-#include <driver/mcpwm.h>
-#include <driver/pcnt.h>
-#include <esp_task_wdt.h>
-#include <math.h>
-#include <soc/mcpwm_reg.h>
-#include <soc/mcpwm_struct.h>
-#include <soc/pcnt_reg.h>
-#include <soc/pcnt_struct.h>
-
-// on espidf need to use portDISABLE/ENABLE_INTERRUPTS
-//
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#define fasDisableInterrupts portDISABLE_INTERRUPTS
-#define fasEnableInterrupts portENABLE_INTERRUPTS
-
-// Only since esp-idf v4.4 MCPWM_TIMER0_PHASE_DIRECTION_S is defined. So use
-// this to distinguish between the two versions
-#if defined(MCPWM_TIMER0_PHASE_DIRECTION_S)
-#define __ESP32_IDF_V44__
-#endif
-
-// Esp32 queue definitions
-#define MAX_STEPPER 6
-#define NUM_QUEUES 6
-#define QUEUE_LEN 32
-
-// Esp32 timing definition
-#define TICKS_PER_S 16000000L
-#define MIN_CMD_TICKS (TICKS_PER_S / 2000)
-#define MIN_DIR_DELAY_US (MIN_CMD_TICKS / (TICKS_PER_S / 1000000))
-#define MAX_DIR_DELAY_US (65535 / (TICKS_PER_S / 1000000))
-#define DELAY_MS_BASE 4
-
-// The espidf-platform needs a couple of arduino like definitions
-#define LOW 0
-#define HIGH 1
-#define OUTPUT GPIO_MODE_OUTPUT
-#define pinMode(pin, mode) gpio_set_direction((gpio_num_t)pin, mode)
-#define digitalWrite(pin, level) gpio_set_level((gpio_num_t)pin, level)
-
-// debug led timing
-#define DEBUG_LED_HALF_PERIOD 50
-
-#define noop_or_wait vTaskDelay(1)
-
-#define SUPPORT_QUEUE_ENTRY_START_POS_U16
-
-// have support for pulse counter
-#define SUPPORT_ESP32_PULSE_COUNTER
 
 // have more than one core
 #define SUPPORT_CPU_AFFINITY
